@@ -79,6 +79,54 @@ static void three_insert(struct three *three, int val)
 	}
 }
 
+static int node_find_min_val(struct node *node)
+{
+	if (!node->left) {
+		return node->val;
+	} else {
+		return node_find_min_val(node->left);
+	}
+}
+
+static struct node *node_remove(struct node *node, int val)
+{
+	if (node->val != val) {
+		if (val < node->val && node->left) {
+			node->left = node_remove(node->left, val);
+		}
+		if (val > node->val && node->right) {
+			node->right = node_remove(node->right, val);
+		}
+		return node;
+	} else {
+		if (node->left && node->right) {
+			node->val = node_find_min_val(node->right);
+			node->right = node_remove(node->right, node->val);
+			return node;
+		} else if (node->left) {
+			struct node *left = node->left;
+			node->left = NULL;
+			node_destroy(node);
+			return left;
+		} else if (node->right) {
+			struct node *right = node->right;
+			node->right = NULL;
+			node_destroy(node);
+			return right;
+		} else {
+			node_destroy(node);
+			return NULL;
+		}
+	}
+}
+
+static void three_remove(struct three *three, int val)
+{
+	if (three->root) {
+		three->root = node_remove(three->root, val);
+	}
+}
+
 static void three_print(struct three *three)
 {
 	if (three->root) {
@@ -91,9 +139,23 @@ int main(void)
 	struct three *three = three_create();
 	three_insert(three, 42);
 	three_insert(three, -100);
+	three_insert(three, 61);
 	three_insert(three, 50);
+	three_insert(three, 63);
+	three_insert(three, 5);
+	three_insert(three, 777);
+	three_insert(three, 43);
 	three_insert(three, 0);
 	three_print(three);
+
+	printf("remove(42):\n");
+	three_remove(three, 42);
+	three_print(three);
+
+	printf("remove(61):\n");
+	three_remove(three, 61);
+	three_print(three);
+
 	three_destroy(three);
 	return 0;
 }
