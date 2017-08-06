@@ -68,19 +68,47 @@ static int node_balance(struct node *node)
 	}
 }
 
-static void node_insert(struct node *node, int val)
+static struct node *node_rebalance(struct node *node)
+{
+	printf("node_rebalance:%d\n", node->val);
+	return node;
+}
+
+#define ABS(a) ((a > 0)?(a):(-a))
+
+static struct node *node_insert(struct node *node, int val)
 {
 	if (val < node->val) {
 		if (node->left) {
+			int balance;
+
 			node_insert(node->left, val);
+
+			balance = node_balance(node);
+			if (ABS(balance) > 1) {
+				return node_rebalance(node);
+			} else {
+				return node;
+			}
 		} else {
 			node->left = node_create(val);
+			return node;
 		}
 	} else {
 		if (node->right) {
+			int balance;
+
 			node_insert(node->right, val);
+
+			balance = node_balance(node);
+			if (ABS(balance) > 1) {
+				return node_rebalance(node);
+			} else {
+				return node;
+			}
 		} else {
 			node->right = node_create(val);
+			return node;
 		}
 	}
 }
@@ -101,7 +129,7 @@ static void three_destroy(struct three *three)
 static void three_insert(struct three *three, int val)
 {
 	if (three->root) {
-		node_insert(three->root, val);
+		three->root = node_insert(three->root, val);
 	} else {
 		three->root = node_create(val);
 	}
@@ -175,8 +203,6 @@ int main(void)
 	three_insert(three, 43);
 	three_insert(three, 0);
 	three_print(three);
-
-	printf("balance(root->left):%d\n", node_balance(three->root->left));
 
 	printf("remove(42):\n");
 	three_remove(three, 42);
