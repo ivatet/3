@@ -40,6 +40,34 @@ static void node_print(struct node *node, const char *lbl, int depth)
 	}
 }
 
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
+static int node_max_depth(struct node *node)
+{
+	if (node->left && node->right) {
+		return 1 + MAX(node_max_depth(node->left), node_max_depth(node->right));
+	} else if (node->left) {
+		return 1 + node_max_depth(node->left);
+	} else if (node->right) {
+		return 1 + node_max_depth(node->right);
+	} else {
+		return 1;
+	}
+}
+
+static int node_balance(struct node *node)
+{
+	if (node->left && node->right) {
+		return node_max_depth(node->right) - node_max_depth(node->left);
+	} else if (node->left) {
+		return -node_max_depth(node->left);
+	} else if (node->right) {
+		return node_max_depth(node->right);
+	} else {
+		return 0;
+	}
+}
+
 static void node_insert(struct node *node, int val)
 {
 	if (val < node->val) {
@@ -147,6 +175,8 @@ int main(void)
 	three_insert(three, 43);
 	three_insert(three, 0);
 	three_print(three);
+
+	printf("balance(root->left):%d\n", node_balance(three->root->left));
 
 	printf("remove(42):\n");
 	three_remove(three, 42);
