@@ -68,10 +68,41 @@ static int node_balance(struct node *node)
 	}
 }
 
-static struct node *node_rebalance(struct node *node)
+static struct node *node_rotate_left(struct node *node)
 {
-	printf("node_rebalance:%d\n", node->val);
-	return node;
+	struct node *root = node->right;
+	node->right = root->left;
+	root->left = node;
+	return root;
+}
+
+static struct node *node_rotate_right(struct node *node)
+{
+	struct node *root = node->left;
+	node->left = root->right;
+	root->right = node;
+	return root;
+}
+
+static struct node *node_rebalance(struct node *node, int val)
+{
+	if (val < node->val) {
+		struct node *child = node->left;
+		if (val < child->val) {
+			return node_rotate_right(node);
+		} else {
+			node->left = node_rotate_left(node->left);
+			return node_rotate_right(node);
+		}
+	} else {
+		struct node *child = node->right;
+		if (val < child->val) {
+			node->right = node_rotate_right(node->right);
+			return node_rotate_left(node);
+		} else {
+			return node_rotate_left(node);
+		}
+	}
 }
 
 #define ABS(a) ((a > 0)?(a):(-a))
@@ -82,11 +113,11 @@ static struct node *node_insert(struct node *node, int val)
 		if (node->left) {
 			int balance;
 
-			node_insert(node->left, val);
+			node->left = node_insert(node->left, val);
 
 			balance = node_balance(node);
 			if (ABS(balance) > 1) {
-				return node_rebalance(node);
+				return node_rebalance(node, val);
 			} else {
 				return node;
 			}
@@ -98,11 +129,11 @@ static struct node *node_insert(struct node *node, int val)
 		if (node->right) {
 			int balance;
 
-			node_insert(node->right, val);
+			node->right = node_insert(node->right, val);
 
 			balance = node_balance(node);
 			if (ABS(balance) > 1) {
-				return node_rebalance(node);
+				return node_rebalance(node, val);
 			} else {
 				return node;
 			}
