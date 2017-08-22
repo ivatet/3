@@ -125,7 +125,7 @@ static struct node *node_insert(struct node *node, int val)
 			node->left = node_create(val);
 			return node;
 		}
-	} else {
+	} else if (val > node->val) {
 		if (node->right) {
 			int balance;
 
@@ -141,6 +141,8 @@ static struct node *node_insert(struct node *node, int val)
 			node->right = node_create(val);
 			return node;
 		}
+	} else {
+		return node;
 	}
 }
 
@@ -232,6 +234,7 @@ int main(void)
 	three_insert(three, 5);
 	three_insert(three, 777);
 	three_insert(three, 43);
+	three_insert(three, 0);
 	three_insert(three, 0);
 	three_print(three);
 
