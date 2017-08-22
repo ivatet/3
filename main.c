@@ -7,10 +7,6 @@ struct node {
 	int val;
 };
 
-struct three {
-	struct node *root;
-};
-
 static struct node *node_create(int val)
 {
 	struct node *node = calloc(1, sizeof(*node));
@@ -84,7 +80,7 @@ static struct node *node_rotate_right(struct node *node)
 	return root;
 }
 
-static struct node *node_rebalance(struct node *node, int val)
+static struct node *node_rebalance_on_insert(struct node *node, int val)
 {
 	if (val < node->val) {
 		struct node *child = node->left;
@@ -117,7 +113,7 @@ static struct node *node_insert(struct node *node, int val)
 
 			balance = node_balance(node);
 			if (ABS(balance) > 1) {
-				return node_rebalance(node, val);
+				return node_rebalance_on_insert(node, val);
 			} else {
 				return node;
 			}
@@ -133,7 +129,7 @@ static struct node *node_insert(struct node *node, int val)
 
 			balance = node_balance(node);
 			if (ABS(balance) > 1) {
-				return node_rebalance(node, val);
+				return node_rebalance_on_insert(node, val);
 			} else {
 				return node;
 			}
@@ -146,25 +142,24 @@ static struct node *node_insert(struct node *node, int val)
 	}
 }
 
-static struct three *three_create(void)
+static struct node *node_rebalance_on_remove(struct node *node)
 {
-	return calloc(1, sizeof(struct three));
-}
-
-static void three_destroy(struct three *three)
-{
-	if (three->root) {
-		node_destroy(three->root);
-	}
-	free(three);
-}
-
-static void three_insert(struct three *three, int val)
-{
-	if (three->root) {
-		three->root = node_insert(three->root, val);
+	if (node_balance(node) < 0) {
+		struct node *child = node->left;
+		if (node_balance(child) < 0) {
+			return node_rotate_right(node);
+		} else {
+			node->left = node_rotate_left(node->left);
+			return node_rotate_right(node);
+		}
 	} else {
-		three->root = node_create(val);
+		struct node *child = node->right;
+		if (node_balance(child) < 0) {
+			node->right = node_rotate_right(node->right);
+			return node_rotate_left(node);
+		} else {
+			return node_rotate_left(node);
+		}
 	}
 }
 
@@ -186,12 +181,22 @@ static struct node *node_remove(struct node *node, int val)
 		if (val > node->val && node->right) {
 			node->right = node_remove(node->right, val);
 		}
-		return node;
+
+		if (ABS(node_balance(node)) > 1) {
+			return node_rebalance_on_remove(node);
+		} else {
+			return node;
+		}
 	} else {
 		if (node->left && node->right) {
 			node->val = node_find_min_val(node->right);
 			node->right = node_remove(node->right, node->val);
-			return node;
+
+			if (ABS(node_balance(node)) > 1) {
+				return node_rebalance_on_remove(node);
+			} else {
+				return node;
+			}
 		} else if (node->left) {
 			struct node *left = node->left;
 			node->left = NULL;
@@ -206,6 +211,32 @@ static struct node *node_remove(struct node *node, int val)
 			node_destroy(node);
 			return NULL;
 		}
+	}
+}
+
+struct three {
+	struct node *root;
+};
+
+static struct three *three_create(void)
+{
+	return calloc(1, sizeof(struct three));
+}
+
+static void three_destroy(struct three *three)
+{
+	if (three->root) {
+		node_destroy(three->root);
+	}
+	free(three);
+}
+
+static void three_insert(struct three *three, int val)
+{
+	if (three->root) {
+		three->root = node_insert(three->root, val);
+	} else {
+		three->root = node_create(val);
 	}
 }
 
@@ -242,8 +273,8 @@ int main(void)
 	three_remove(three, 42);
 	three_print(three);
 
-	printf("remove(61):\n");
-	three_remove(three, 61);
+	printf("remove(50):\n");
+	three_remove(three, 50);
 	three_print(three);
 
 	three_destroy(three);
